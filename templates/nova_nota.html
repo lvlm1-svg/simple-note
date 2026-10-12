@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple-Note - Criar Nota</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary-blue: #1e3a8a;
+      --secondary-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --orange-hover: #ea580c;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--primary-blue);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 2px solid var(--accent-orange);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-back:hover {
+      background-color: var(--accent-orange);
+      color: white;
+    }
+
+    /* Container Principal */
+    main {
+      flex: 1;
+      max-width: 800px;
+      width: 90%;
+      margin: 2rem auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      color: var(--primary-blue);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Campos de Entrada */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--secondary-blue);
+    }
+
+    textarea {
+      min-height: 250px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    /* Opções adicionais (Categorias e Cores) */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.3rem;
+    }
+
+    .color-option {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.2s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.15);
+    }
+
+    .color-option.selected {
+      border-color: var(--primary-blue);
+      transform: scale(1.1);
+    }
+
+    /* Barra de Ações na Parte Inferior */
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 2px solid #f1f5f9;
+    }
+
+    .char-counter {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-save {
+      background-color: var(--accent-orange);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-save:hover {
+      background-color: var(--orange-hover);
+    }
+
+    .btn-save:active {
+      transform: scale(0.98);
+    }
+
+    .btn-cancel {
+      background-color: #e2e8f0;
+      color: var(--text-main);
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+
+    .btn-cancel:hover {
+      background-color: #cbd5e1;
+    }
+
+  </style>
+</head>
+<body>
+
+
+
+  <!-- Container do Formulário -->
+  <main>
+    <h1 class="page-title">
+      <i class="fa-solid fa-pen-to-square"></i> Nova Anotação
+    </h1>
+
+    <form id="noteForm">
+      <!-- Título -->
+      <div class="form-group">
+        <label for="noteTitle">Título da Nota</label>
+        <input type="text" id="noteTitle" autofocus>
+      </div>
+
+      <!-- Nota -->
+      <div class="form-group" style="margin-top: 1rem;">
+        <label for="noteContent">Conteúdo da Anotação</label>
+        <textarea id="noteContent"></textarea>
+      </div>
+
+      <!-- Rodapé do Formulário -->
+      <div class="actions-bar">
+        <span class="char-counter" id="charCounter"></span>
+        <div class="btn-group">
+          <a href="/home" class="btn-cancel">Cancelar</a>
+          <button type="submit" class="btn-save">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar Nota
+          </button>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const noteForm = document.getElementById('noteForm');
+    noteForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const titulo = document.getElementById('noteTitle').value.trim();
+      const nota = noteContent.value.trim();
+
+      const newNote = {
+        id: "Default",
+        titulo: titulo,
+        nota: nota,
+      };
+
+      //Envia os dados para o servidor
+      async function fun(){
+        const resp = await fetch("/nota/post", {
+            method: 'POST', // Método HTTP
+            headers: {
+                'Content-Type': 'application/json' // Informa que o corpo é JSON
+            },
+                body: JSON.stringify(newNote) // Converte o objeto JS em string JSON
+            }) 
+        }
+
+        fun().then(resposta => {
+            if (!resposta.ok) {
+                throw new Error('Erro na requisição: ' + resposta.status);
+            }
+            return resposta.json(); // Converte a resposta do servidor para JSON
+        
+        }).then(dadosRecebidos => {
+            console.log('Sucesso:', dadosRecebidos);
+        
+        }).catch(erro => {
+            console.error('Falha ao enviar:', erro);
+        });
+
+      // Redireciona para a página principal
+      window.location.href = '/home';
+    });
+  </script>
+</body>
+</html>

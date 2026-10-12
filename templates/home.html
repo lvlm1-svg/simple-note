@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple-Note</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brandBlue: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            800: '#1e3a8a',
+                            900: '#0f172a',
+                        },
+                        brandOrange: {
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for smooth hover effects and scrolling */
+        .note-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .note-card:hover {
+            transform: translateY(-4px);
+        }
+        .trash-bar {
+            transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .note-card:hover .trash-bar {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.25);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col font-sans text-slate-800">
+
+    <!-- Navigation Header -->
+    <header class="bg-brandBlue-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Left Side: Logo & About -->
+            <div class="flex items-center gap-4 sm:gap-6">
+                <div class="flex items-center gap-2 cursor-pointer group" onclick="resetFilter()">
+                    <div class="w-10 h-10 rounded-xl bg-brandOrange-500 flex items-center justify-center text-white shadow-lg shadow-brandOrange-500/30 group-hover:bg-brandOrange-600 transition-colors">
+                        <i class="fa-solid me-0 fa-book-bookmark text-lg"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-white font-sans">
+                        Simple<span class="text-brandOrange-500">-Note</span>
+                    </span>
+                </div>
+                
+                <button onclick="toggleAboutModal(true)" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-brandBlue-800/60 hover:bg-brandBlue-800 text-blue-100 hover:text-white transition-all border border-brandBlue-800">
+                    <i class="fa-solid fa-circle-info mr-1.5 text-brandOrange-500"></i> Sobre
+                </button>
+            </div>
+
+            <!-- Right Side: Search & User Profile -->
+            <div class="flex items-center gap-3 sm:gap-4 flex-1 max-w-md justify-end">
+                <!-- Search Bar -->
+                <div class="relative w-full max-w-xs">
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Pesquisar notas..." 
+                        class="w-full pl-9 pr-4 py-1.5 bg-brandBlue-800/70 text-white placeholder-blue-300 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-brandOrange-500 focus:bg-brandBlue-800 transition-all border border-brandBlue-800">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-blue-300 text-sm"></i>
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-2 text-blue-300 hover:text-white text-xs">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- User Profile Icon -->
+                <div class="relative group">
+                    <button onclick="toggleProfileModal(true)" class="w-9 h-9 rounded-full bg-brandOrange-500 text-white flex items-center justify-center font-bold text-sm shadow-md hover:ring-2 hover:ring-brandOrange-500 ring-offset-2 ring-offset-brandBlue-900 transition-all">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Search Indicator Header (Hidden by default) -->
+        <div id="searchHeader" class="hidden mb-6 flex items-center justify-between bg-white p-3 px-4 rounded-xl shadow-sm border border-slate-200">
+            <span class="text-sm text-slate-600">Resultados da pesquisa para: <strong id="searchTermDisplay" class="text-brandBlue-900"></strong></span>
+            <button onclick="clearSearch()" class="text-xs text-brandOrange-600 hover:underline font-semibold">Limpar Filtro</button>
+        </div>
+
+        <!-- Grid layout for notes -->
+        <div id="notesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
+            
+            <!-- FIXED CARD 1: Add New Note Button -->
+            <div onclick="openCreateModal()" 
+                class="bg-white rounded-2xl border-2 border-dashed border-brandOrange-500/60 hover:border-brandOrange-500 bg-orange-50/20 hover:bg-orange-50/60 p-6 h-64 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group shadow-sm hover:shadow-md">
+                <div class="w-16 h-16 rounded-full bg-brandOrange-500/10 text-brandOrange-500 group-hover:bg-brandOrange-500 group-hover:text-white flex items-center justify-center transition-all duration-200 mb-3 shadow-inner">
+                    <i class="fa-solid fa-plus text-3xl"></i>
+                </div>
+                <span class="font-semibold text-brandBlue-900 group-hover:text-brandOrange-600 transition-colors">Nova Anotação</span>
+                <p class="text-xs text-slate-400 mt-1">Clique para criar</p>
+            </div>
+
+            <!-- Dynamic Notes will be inserted here -->
+            
+        </div>
+
+        <!-- Empty state message -->
+        <div id="emptyState" class="hidden py-16 text-center">
+            <div class="w-16 h-16 bg-slate-200 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-file-circle-xmark text-2xl"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-700">Nenhuma anotação encontrada</h3>
+            <p class="text-sm text-slate-500 mt-1">Tente pesquisar outro termo ou crie uma nova nota.</p>
+        </div>
+
+    </main>
+
+    <!-- MODAL: View Note Details -->
+    <div id="viewNoteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div class="bg-brandBlue-900 px-6 py-4 flex items-center justify-between text-white">
+                <h3 id="viewNoteTitle" class="font-bold text-lg truncate pr-4"></h3>
+                <button onclick="closeViewModal()" class="text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="viewNoteContent" class="text-slate-700 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto custom-scrollbar text-base"></div>
+                <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+                    <span id="viewNoteDate"></span>
+                    <button id="viewNoteEditBtn" class="px-4 py-2 bg-brandBlue-800 text-white rounded-lg hover:bg-brandBlue-900 font-medium flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen"></i> Editar Nota
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: About / Sobre -->
+    <div id="aboutModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-2xl bg-brandOrange-500 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brandOrange-500/30 text-2xl">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-brandBlue-900 mb-1">Simple-Note</h2>
+                <span class="inline-block bg-orange-100 text-brandOrange-700 text-xs px-2.5 py-0.5 rounded-full font-semibold mb-4">Versão 1.0</span>
+                <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                    Sua plataforma minimalista e eficiente para organizar ideias, lembretes e anotações do dia a dia.
+                </p>
+                
+                <div class="bg-slate-50 p-4 rounded-xl text-left text-xs text-slate-600 space-y-2 mb-6 border border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-brandOrange-500"></i>
+                        <span>Criação e edição simples de blocos</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-brandOrange-500"></i>
+                        <span>Exclusão intuitiva com efeito hover na lixeira</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-brandOrange-500"></i>
+                        <span>Pesquisa e salvamento automático local</span>
+                    </div>
+                </div>
+
+                <button onclick="toggleAboutModal(false)" class="w-full py-2.5 bg-brandBlue-900 hover:bg-brandBlue-800 text-white font-semibold rounded-xl transition-colors">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: User Profile -->
+    <div id="profileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden p-6 text-center">
+            <div class="w-20 h-20 rounded-full bg-brandOrange-500 text-white text-3xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <h3 class="font-bold text-lg text-brandBlue-900">Usuário Simple-Note</h3>
+            <p class="text-xs text-slate-500 mb-6">usuario@simplenote.com</p>
+
+            <div class="border-t border-b border-slate-100 py-3 my-3 text-sm text-slate-600 flex justify-around">
+                <div>
+                    <span id="profileNoteCount" class="block font-bold text-lg text-brandOrange-600">0</span>
+                    <span class="text-xs text-slate-400">Anotações</span>
+                </div>
+            </div>
+
+            <button onclick="toggleProfileModal(false)" class="w-full mt-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors">
+                Fechar
+            </button>
+        </div>
+    </div>
+
+    <script>
+
+        // State Management
+        let notes;
+        let selectedColor = 'white';
+
+        async function getDados() {
+            const resp = await fetch("/notas")
+            notes = await resp.json()
+            notes = notes.reverse()
+        
+            renderNotes();
+        } 
+
+         
+
+        // Load Notes on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            getDados() 
+        });
+
+
+        // Render Notes Grid
+        function renderNotes(filterText = '') {
+            const grid = document.getElementById('notesGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Keep fixed First Add Card
+            const addCardHtml = `
+                <div onclick="openCreateModal()" 
+                    class="bg-white rounded-2xl border-2 border-dashed border-brandOrange-500/60 hover:border-brandOrange-500 bg-orange-50/20 hover:bg-orange-50/60 p-6 h-64 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group shadow-sm hover:shadow-md">
+                    <div class="w-16 h-16 rounded-full bg-brandOrange-500/10 text-brandOrange-500 group-hover:bg-brandOrange-500 group-hover:text-white flex items-center justify-center transition-all duration-200 mb-3 shadow-inner">
+                        <i class="fa-solid fa-plus text-3xl"></i>
+                    </div>
+                    <span class="font-semibold text-brandBlue-900 group-hover:text-brandOrange-600 transition-colors">Nova Anotação</span>
+                    <p class="text-xs text-slate-400 mt-1">Clique para criar</p>
+                </div>
+            `;
+
+            const filtered = notes.filter(note => 
+                note.titulo.toLowerCase().includes(filterText.toLowerCase()) || 
+                note.nota.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            if (filtered.length === 0 && filterText.trim() !== '') {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            const colorClasses = {
+                white: 'bg-white border-slate-200',
+                blue: 'bg-blue-50/80 border-blue-200',
+                amber: 'bg-amber-50/80 border-amber-200',
+                emerald: 'bg-emerald-50/80 border-emerald-200'
+            };
+
+            const notesHtml = filtered.map(note => {
+                const bgClass = colorClasses[note.color] || colorClasses.white;
+                return `
+                    <div class="note-card relative ${bgClass} rounded-2xl border shadow-sm hover:shadow-md h-64 flex flex-col justify-between overflow-hidden cursor-pointer group"
+                        onclick="viewNote('${note.id}')">
+                        
+                        <!-- Content Area -->
+                        <div class="p-5 flex-1 overflow-hidden">
+                            <h4 class="font-bold text-slate-800 text-lg mb-2 truncate">${escapeHtml(note.titulo)}</h4>
+                            <p class="text-slate-600 text-sm leading-relaxed line-clamp-5 whitespace-pre-wrap">${escapeHtml(note.nota)}</p>
+                        </div>
+
+                        <!-- Footer Date -->
+                        <div class="px-5 py-2 text-[11px] text-slate-400 border-t border-slate-100/60 flex justify-between items-center">
+                            <span>${note.date || ''}</span>
+                            <span class="text-xs text-brandOrange-500 opacity-0 group-hover:opacity-100 transition-opacity">Ver detalhes</span>
+                        </div>
+
+                        <!-- Trash Icon Bar (Hover Requirement from Sketch) -->
+                        <div class="trash-bar absolute bottom-0 inset-x-0 bg-gradient-to-t from-red-600 to-red-500 text-white p-2.5 flex items-center justify-center gap-2 shadow-lg z-10 hover:bg-red-700 transition-colors"
+                            onclick="event.stopPropagation(); deleteNote('${note.id}')"
+                            title="Excluir nota">
+                            <i class="fa-solid fa-trash-can text-base"></i>
+                            <span class="text-xs font-semibold uppercase tracking-wider">Excluir</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.innerHTML = addCardHtml + notesHtml;
+            document.getElementById('profileNoteCount').innerText = notes.length;
+        }
+
+        // Color Selection Logic
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                if (btn.dataset.color === color) {
+                    btn.classList.add('ring-2', 'ring-brandOrange-500', 'ring-offset-2');
+                } else {
+                    btn.classList.remove('ring-2', 'ring-brandOrange-500', 'ring-offset-2');
+                }
+            });
+        }
+
+
+        function openCreateModal(){
+            document.location.href = "/nota/post"
+        }
+
+
+
+        // Delete Note
+        function deleteNote(id) {
+            async function fun(){
+            const resp = await fetch("/nota/del", {
+                method: 'POST', // Método HTTP
+                headers: {
+                    'Content-Type': 'application/json' // Informa que o corpo é JSON
+                },
+                    body: JSON.stringify({id: id}) // Converte o objeto JS em string JSON
+                }) 
+            }
+
+            fun().then(resposta => {
+                if (!resposta.ok) {
+                    throw new Error('Erro na requisição: ' + resposta.status);
+                }
+                return resposta.json(); // Converte a resposta do servidor para JSON
+            })
+
+            window.location.reload()
+        }
+
+        // View Note
+        function viewNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            document.getElementById('viewNoteTitle').innerText = note.title;
+            document.getElementById('viewNoteContent').innerText = note.content;
+            document.getElementById('viewNoteDate').innerText = `Criado em: ${note.date || 'Recente'}`;
+            
+            const editBtn = document.getElementById('viewNoteEditBtn');
+            editBtn.onclick = () => {
+                closeViewModal();
+                openEditModal(note);
+            };
+
+            document.getElementById('viewNoteModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewNoteModal').classList.add('hidden');
+        }
+
+
+
+        // Search Filter Logic
+        function handleSearch() {
+            const val = document.getElementById('searchInput').value;
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const searchHeader = document.getElementById('searchHeader');
+            const searchTermDisplay = document.getElementById('searchTermDisplay');
+
+            if (val.trim() !== '') {
+                clearBtn.classList.remove('hidden');
+                searchHeader.classList.remove('hidden');
+                searchTermDisplay.innerText = `"${val}"`;
+            } else {
+                clearBtn.classList.add('hidden');
+                searchHeader.classList.add('hidden');
+            }
+
+            renderNotes(val);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            handleSearch();
+        }
+
+        function resetFilter() {
+            clearSearch();
+        }
+
+        // About & Profile Modals
+        function toggleAboutModal(show) {
+            document.getElementById('aboutModal').classList.toggle('hidden', !show);
+        }
+
+        function toggleProfileModal(show) {
+            document.getElementById('profileModal').classList.toggle('hidden', !show);
+        }
+
+        // Helper to escape HTML characters
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
