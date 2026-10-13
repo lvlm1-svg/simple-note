@@ -3,8 +3,7 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, render_template, request
-
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__, template_folder="../templates")
 
 # Pega a URL do banco a partir das Variáveis de Ambiente do Vercel
 DATABASE_URL = "postgresql://neondb_owner:npg_YlybUK1i9vPp@ep-wandering-mode-b6kzw9tz-pooler.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
