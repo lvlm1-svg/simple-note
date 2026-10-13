@@ -1,16 +1,18 @@
-from flask import Flask, request, render_template
-import psycopg2, os
+# api/index.py
+import os
+import psycopg2
 from psycopg2.extras import RealDictCursor
-os.system("cls")
-app = Flask(__name__)
+from flask import Flask, jsonify, render_template, request
+
+app = Flask(__name__, template_folder='../templates')
+
+# Pega a URL do banco a partir das Variáveis de Ambiente do Vercel
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_bd_conection():
+    return psycopg2.connect(DATABASE_URL)
 
 @app.route("/")
-def fun():
-    return "Olá"
-
-
-
-# @ para executar a função quando a rota "/" for acessada
 @app.route("/home")
 def home_site():
     return render_template("home.html")
@@ -18,12 +20,6 @@ def home_site():
 @app.route("/styles")
 def styles_site():
     return render_template("style.css")
-
-
-str_conection = "postgresql://neondb_owner:npg_YlybUK1i9vPp@ep-wandering-mode-b6kzw9tz-pooler.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-def get_bd_conection():
-    conn = psycopg2.connect(str_conection)
-    return conn
 
 
 
