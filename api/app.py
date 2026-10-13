@@ -7,7 +7,7 @@ from flask import Flask, jsonify, render_template, request
 app = Flask(__name__, template_folder='../templates')
 
 # Pega a URL do banco a partir das Variáveis de Ambiente do Vercel
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = "postgresql://neondb_owner:npg_YlybUK1i9vPp@ep-wandering-mode-b6kzw9tz-pooler.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 def get_bd_conection():
     return psycopg2.connect(DATABASE_URL)
@@ -20,6 +20,7 @@ def home_site():
 @app.route("/styles")
 def styles_site():
     return render_template("style.css")
+
 
 
 
@@ -71,18 +72,19 @@ def delete():
 
         dados = request.get_json()
         id = dados["id"]
-
-        cursor.execute("DELETE FROM pagina WHERE id=%s", id)
+        
+        print(id)
+        cursor.execute("DELETE FROM pagina WHERE id=%s", (id,))
         conn.commit()
 
         cursor.close()
-        conn.close()
-        
-        return "Ok", 200
-    
+        conn.close()  
 
     except Exception as e:
         print(f"Teve erro no delete: {e}")
+
+    return "ok"
+
 
 
 if __name__ == "__main__":
